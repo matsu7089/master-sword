@@ -13,8 +13,12 @@ ms.ASSETS = {
     // Object
     field: './assets/img/field.png',
     arrow: './assets/img/arrow.png'
+  },
+  spritesheet: {
+    poniko: './assets/ss/poniko.ss',
+    enemy: './assets/ss/enemy.ss'
   }
-}
+};
 ms.SCENES = [
   {
     className: 'ms.MainScene',
@@ -22,16 +26,44 @@ ms.SCENES = [
   }
 ];
 
+phina.define('ms.Player', {
+  superClass: 'phina.display.Sprite',
+  init: function() {
+    this.superInit('poniko');
+    this.setScale(2);
+    this.frameAnimation = phina.accessory.FrameAnimation('poniko')
+      .attachTo(this).gotoAndPlay('wait');
+  }
+});
+
+phina.define('ms.Enemy', {
+  superClass: 'phina.display.Sprite',
+  init: function(name) {
+    this.superInit(name);
+    this.setScale(2);
+    this.frameAnimation = phina.accessory.FrameAnimation('enemy')
+      .attachTo(this).gotoAndPlay('default');
+  }
+});
+
 phina.define('ms.MainScene', {
   superClass: 'phina.display.DisplayScene',
   init: function(options) {
     this.superInit(options);
+    this.canvas.imageSmoothingEnabled = false;
     this.backgroundColor = '#00d6ff';
+
+    phina.display.Sprite('field').setScale(2)
+      .setPosition(ms.SCREEN_W/2, 372).addChildTo(this);
+    
+    ms.Player().addChildTo(this)
+      .setPosition(ms.SCREEN_W/2, ms.SCREEN_H/2);
   }
 });
 
 phina.main(function() {
   var app = phina.game.GameApp({
+    assets: ms.ASSETS,
     width: ms.SCREEN_W,
     height: ms.SCREEN_H,
     scenes: ms.SCENES,
