@@ -33,6 +33,9 @@ phina.define('ms.Player', {
     this.setScale(2);
     this.frameAnimation = phina.accessory.FrameAnimation('poniko')
       .attachTo(this).gotoAndPlay('wait');
+    
+    this.vx = 1;
+    this.vy = 0;
   }
 });
 
@@ -43,6 +46,27 @@ phina.define('ms.Enemy', {
     this.setScale(2);
     this.frameAnimation = phina.accessory.FrameAnimation('enemy')
       .attachTo(this).gotoAndPlay('default');
+    
+    this.setPosition(ms.SCREEN_W+32, ms.SCREEN_H/2);
+    this.vx = 0;
+    this.on('enterframe', function() {
+      this.x -= this.vx;
+      // テスト用
+      if (this.x < -32) this.x = ms.SCREEN_W+32;
+    })
+  }
+});
+
+phina.define('ms.Field', {
+  superClass: 'phina.display.Sprite',
+  init: function() {
+    this.superInit('field');
+    this.setScale(2);
+    this.setOrigin(0, 0);
+
+    this.on('enterframe', function() {
+      if (this.x < -384) this.x += 768;
+    });
   }
 });
 
@@ -53,11 +77,32 @@ phina.define('ms.MainScene', {
     this.canvas.imageSmoothingEnabled = false;
     this.backgroundColor = '#00d6ff';
 
-    phina.display.Sprite('field').setScale(2)
-      .setPosition(ms.SCREEN_W/2, 372).addChildTo(this);
+    var field1 = ms.Field().addChildTo(this).setPosition(0, 256);
+    var field2 = ms.Field().addChildTo(this).setPosition(384, 256);
     
-    ms.Player().addChildTo(this)
-      .setPosition(ms.SCREEN_W/2, ms.SCREEN_H/2);
+    var player = ms.Player().addChildTo(this)
+      .setPosition(ms.SCREEN_W*1/8, ms.SCREEN_H/2);
+
+    var enemyGroup = phina.display.DisplayElement().addChildTo(this);
+    ms.Enemy('banaa').addChildTo(enemyGroup);
+
+    var flickable = phina.accessory.Flickable().$extend({
+      vertical: false,
+      horizontal: false
+    }).attachTo(this);
+
+    flickable.on('flickstart', function(e) {
+      player.frameAnimation.gotoAndPlay('attack');
+    });
+
+    this.on('enterframe', function(e) {
+      field1.x -= player.vx;
+      field2.x -= player.vx;
+
+      enemyGroup.children.forEach(function(enemy) {
+        enemy.x -= player.vx;
+      });
+    });
   }
 });
 
