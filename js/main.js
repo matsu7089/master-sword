@@ -4,13 +4,10 @@ ms.SCREEN_W = 320;
 ms.SCREEN_H = 480;
 ms.ASSETS = {
   image: {
-    // Player
     poniko: './assets/img/poniko.png',
-    // Enemy
     banaa: './assets/img/banaa.png',
     dragon: './assets/img/dragon.png',
     slimusi: './assets/img/slimusi.png',
-    // Object
     field: './assets/img/field.png',
     arrow: './assets/img/arrow.png'
   },
@@ -32,10 +29,36 @@ phina.define('ms.Player', {
     this.superInit('poniko');
     this.setScale(2);
     this.frameAnimation = phina.accessory.FrameAnimation('poniko')
-      .attachTo(this).gotoAndPlay('wait');
+      .attachTo(this).gotoAndPlay('walk');
     
     this.vx = 1;
     this.vy = 0;
+    this.isAttacking = false;
+
+    this.on('enterframe', function() {
+      if (!this.isAttacking) return;
+      this.y -= this.vy;
+      this.vy -= 2;
+      if (this.y < ms.SCREEN_H/2) return;
+      this.$extend({
+        y: ms.SCREEN_H/2,
+        isAttacking: false,
+        vx: 0,
+        vy: 0
+      });
+      this.tweener.clear()
+        .wait(500)
+        .call(function() {
+          this.vx = 1;
+          this.frameAnimation.gotoAndPlay('walk');
+        }, this);
+    });
+  },
+  attack: function() {
+    this.tweener.clear();
+    this.frameAnimation.gotoAndPlay('attack');
+    this.isAttacking = true;
+    this.vy = 10;
   }
 });
 
@@ -49,11 +72,27 @@ phina.define('ms.Enemy', {
     
     this.setPosition(ms.SCREEN_W+32, ms.SCREEN_H/2);
     this.vx = 0;
+    this.vy = 0;
     this.on('enterframe', function() {
-      this.x -= this.vx;
       // テスト用
       if (this.x < -32) this.x = ms.SCREEN_W+32;
-    })
+
+      if (!this.isAttacked) return;
+      this.y -= this.vy;
+      this.vy -= 2;
+      if (this.y < ms.SCREEN_H/2) return;
+      this.$extend({
+        y: ms.SCREEN_H/2,
+        isAttacked: false,
+        vx: 0,
+        vy: 0
+      });
+    });
+  },
+  damage: function() {
+    this.isAttacked = true;
+    this.vy = 10;
+    this.vx = -10;
   }
 });
 
@@ -84,23 +123,38 @@ phina.define('ms.MainScene', {
       .setPosition(ms.SCREEN_W*1/8, ms.SCREEN_H/2);
 
     var enemyGroup = phina.display.DisplayElement().addChildTo(this);
-    ms.Enemy('banaa').addChildTo(enemyGroup);
+    var enemy = ms.Enemy('banaa').addChildTo(enemyGroup);
 
     var flickable = phina.accessory.Flickable().$extend({
       vertical: false,
       horizontal: false
     }).attachTo(this);
 
+    var self = this;
     flickable.on('flickstart', function(e) {
-      player.frameAnimation.gotoAndPlay('attack');
+      if (player.isAttacking) return;
+      player.attack();
+      var moveDistance = -enemy.x+104;
+      field1.tweener.clear()
+        .by({x: moveDistance}, 200, 'easeOutCubic');
+      field2.tweener.clear()
+        .by({x: moveDistance}, 200, 'easeOutCubic');
+      enemy.tweener.clear()
+        .by({x: moveDistance}, 200, 'easeOutCubic');
+      
+      self.tweener.clear().wait(200)
+        .call(function() {
+          enemy.damage();
+        });
     });
 
     this.on('enterframe', function(e) {
+      if (player.isAttacking) return;
       field1.x -= player.vx;
       field2.x -= player.vx;
 
       enemyGroup.children.forEach(function(enemy) {
-        enemy.x -= player.vx;
+        enemy.x -= enemy.vx + player.vx;
       });
     });
   }
@@ -112,7 +166,8 @@ phina.main(function() {
     width: ms.SCREEN_W,
     height: ms.SCREEN_H,
     scenes: ms.SCENES,
-    startLabel: 'main'
+    startLabel: 'main',
+    runner: requestAnimationFrame
   });
   app.run();
 });
