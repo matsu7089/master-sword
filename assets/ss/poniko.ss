@@ -15,7 +15,7 @@
       "frames": [6]
     },
     "attack": {
-    	"frames": [7, 8, 9],
+    	"frames": [7, 8, 9, 10],
     	"next": "wait",
     	"frequency": 5
     }
