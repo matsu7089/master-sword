@@ -104,7 +104,7 @@ phina.define('ms.Field', {
     this.setOrigin(0, 0);
 
     this.on('enterframe', function() {
-      if (this.x < -384) this.x += 768;
+      if (this.x < -640) this.x += 1280;
     });
   }
 });
@@ -116,8 +116,8 @@ phina.define('ms.MainScene', {
     this.canvas.imageSmoothingEnabled = false;
     this.backgroundColor = '#00d6ff';
 
-    var field1 = ms.Field().addChildTo(this).setPosition(0, 256);
-    var field2 = ms.Field().addChildTo(this).setPosition(384, 256);
+    var field1 = ms.Field().addChildTo(this).setPosition(0, 204);
+    var field2 = ms.Field().addChildTo(this).setPosition(640, 204);
     
     var player = ms.Player().addChildTo(this)
       .setPosition(ms.SCREEN_W*1/8, ms.SCREEN_H/2);
