@@ -43,14 +43,12 @@ phina.define('ms.Player', {
       this.$extend({
         y: ms.SCREEN_H/2,
         isAttacking: false,
-        vx: 0,
         vy: 0
       });
       this.tweener.clear()
-        .wait(500)
+        .wait(200)
         .call(function() {
           this.vx = 1;
-          this.frameAnimation.gotoAndPlay('walk');
         }, this);
     });
   },
@@ -59,6 +57,7 @@ phina.define('ms.Player', {
     this.frameAnimation.gotoAndPlay('attack');
     this.isAttacking = true;
     this.vy = 10;
+    this.vx = 0;
   }
 });
 
